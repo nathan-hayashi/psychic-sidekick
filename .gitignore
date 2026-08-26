@@ -1,0 +1,7 @@
+# Runtime never ships.
+.env
+.env.*
+logs/
+*.log
+.claude/state/
+scratch/

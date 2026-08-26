@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>psychic-sidekick</title>
+<style>
+  :root {
+    --bg: #faf9f6; --card: #ffffff; --fg: #1c1e21; --muted: #6b6f76;
+    --accent: #2f6f4f; --accent-ink: #ffffff; --line: #d9d7d0; --warn-bg: #f7efd8; --warn-line: #c9a94e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181b; --card: #1f2226; --fg: #e8e6e1; --muted: #9a9fa8;
+      --accent: #58a27c; --accent-ink: #10241a; --line: #33373d; --warn-bg: #2b2617; --warn-line: #8a7433;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0 auto; max-width: 800px; padding: 2rem 1.25rem 4rem; background: var(--bg);
+         color: var(--fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.01em; }
+  .tag { margin: 0.25rem 0 1.25rem; color: var(--muted); }
+  .banner { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 8px;
+            padding: 0.75rem 1rem; font-size: 0.92rem; margin-bottom: 1.25rem; }
+  .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .controls label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem;
+                    text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  select, textarea, button { font: inherit; color: var(--fg); }
+  select { padding: 0.45rem 0.6rem; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+  #form { display: grid; gap: 0.9rem; }
+  #form label { display: block; font-size: 0.8rem; text-transform: uppercase;
+                letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.25rem; }
+  #form textarea { width: 100%; min-height: 2.6rem; padding: 0.5rem 0.65rem; resize: vertical;
+                   border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+  #form select { width: 100%; }
+  .unknown { margin: 1.1rem 0; padding: 0.65rem 1rem; border-left: 3px solid var(--warn-line);
+             background: var(--warn-bg); border-radius: 0 8px 8px 0; font-size: 0.92rem; }
+  .actions { display: flex; gap: 0.75rem; margin: 1rem 0; }
+  button { padding: 0.55rem 1.1rem; border: 1px solid var(--line); border-radius: 8px;
+           background: var(--card); cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  #out { width: 100%; padding: 0.75rem; border: 1px solid var(--line); border-radius: 8px;
+         background: var(--card); font: 0.85rem/1.5 ui-monospace, "Cascadia Mono", monospace; }
+  footer { margin-top: 1.5rem; color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<h1>psychic-sidekick</h1>
+<p class="tag">Fill what you know. What you don't becomes UNKNOWN — never a guess.</p>
+
+<div class="banner"><strong>Presets are not policy.</strong> They fill editable defaults grounded in
+the parent program's tier table. Nothing here grants approval — approval is a human act, recorded
+in its own field.</div>
+
+<div class="controls">
+  <label>Template
+    <select id="tpl">
+      <option class="tpl-opt" value="request-contract">request-contract — the minimal core</option>
+      <option class="tpl-opt" value="high-stakes-task">high-stakes-task — full rigor</option>
+      <option class="tpl-opt" value="context-policy">context-policy — the boundary block</option>
+      <option class="tpl-opt" value="audit-checklist">audit-checklist — binary audits</option>
+    </select>
+  </label>
+  <label>Department preset
+    <select id="preset">
+      <option value="">none</option>
+      <option value="finance">finance</option>
+      <option value="engineering">engineering</option>
+      <option value="marketing">marketing</option>
+    </select>
+  </label>
+</div>
+
+<form id="form" onsubmit="return false"></form>
+<div class="unknown" id="unk"></div>
+<div class="actions">
+  <button id="compile" class="primary" type="button">Compile contract</button>
+  <button id="copy" type="button" disabled>Copy</button>
+</div>
+<textarea id="out" readonly rows="18" placeholder="The compiled contract lands here."></textarea>
+
+<footer>Vocabulary: vendor/SCHEMA-FIELDS.txt — 22 fields, vendored from psychic-templates and
+sync-checked. Runs from file://; zero network, zero dependencies.</footer>
+
+<script src="js/compile.js"></script>
+<script>
+(function () {
+  var tplSel = document.getElementById('tpl');
+  var preSel = document.getElementById('preset');
+  var form = document.getElementById('form');
+  var unk = document.getElementById('unk');
+  var out = document.getElementById('out');
+  var btnC = document.getElementById('compile');
+  var btnCp = document.getElementById('copy');
+
+  function readValues() {
+    var vals = {};
+    var els = form.querySelectorAll('[data-field]');
+    for (var i = 0; i < els.length; i++) { vals[els[i].getAttribute('data-field')] = els[i].value; }
+    return vals;
+  }
+
+  function updateUnknown() {
+    var u = computeUnknowns(tplSel.value, readValues());
+    unk.textContent = u.length
+      ? 'UNKNOWN at compile: ' + u.join(', ')
+      : 'Every field is filled — unknown_fields will read "none".';
+  }
+
+  function render(keep) {
+    var fields = fieldsFor(tplSel.value);
+    var prev = keep || {};
+    form.innerHTML = '';
+    for (var i = 0; i < fields.length; i++) {
+      var f = fields[i];
+      if (f === 'unknown_fields') { continue; }
+      var wrap = document.createElement('div');
+      var lab = document.createElement('label');
+      lab.textContent = f.replace(/_/g, ' ');
+      wrap.appendChild(lab);
+      var el;
+      if (CHOICES[f]) {
+        el = document.createElement('select');
+        var blank = document.createElement('option');
+        blank.value = ''; blank.textContent = '(UNKNOWN)';
+        el.appendChild(blank);
+        for (var j = 0; j < CHOICES[f].length; j++) {
+          var o = document.createElement('option');
+          o.value = CHOICES[f][j]; o.textContent = CHOICES[f][j];
+          el.appendChild(o);
+        }
+      } else {
+        el = document.createElement('textarea');
+        el.rows = 2;
+      }
+      el.setAttribute('data-field', f);
+      if (prev[f]) { el.value = prev[f]; }
+      wrap.appendChild(el);
+      form.appendChild(wrap);
+    }
+    updateUnknown();
+  }
+
+  tplSel.addEventListener('change', function () { render(readValues()); });
+  preSel.addEventListener('change', function () {
+    var vals = readValues();
+    var d = presetDefaults(tplSel.value, preSel.value);
+    for (var k in d) { if (Object.prototype.hasOwnProperty.call(d, k)) { vals[k] = d[k]; } }
+    render(vals);
+  });
+  form.addEventListener('input', updateUnknown);
+  form.addEventListener('change', updateUnknown);
+
+  btnC.addEventListener('click', function () {
+    out.value = compileContract(tplSel.value, readValues());
+    btnCp.disabled = false;
+  });
+  btnCp.addEventListener('click', function () {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(out.value);
+    } else {
+      out.select();
+      document.execCommand('copy');
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
