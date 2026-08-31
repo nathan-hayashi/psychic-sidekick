@@ -2,7 +2,7 @@
 
 The Request-Contract front end: a fill-in-the-fields, multiple-choice UI that compiles a person's
 inputs into a psychic-templates contract and hands the result to a Claude session. Born 2026-08-26
-under the parent HELIX program's SIDE-1 gate (psychic-crew). PRIVATE at creation.
+under the parent HELIX program's SIDE-1 gate (psychic-crew). Private at creation; public since the out-of-band flip ratified at S0-RECONCILE (see GATES.md).
 
 ## Binding rules
 - **Zero-dependency UI.** `index.html` + `js/compile.js` run from `file://` or any static server.
@@ -19,3 +19,6 @@ under the parent HELIX program's SIDE-1 gate (psychic-crew). PRIVATE at creation
 - **Evidence labels** ([E]/[I]/[S]) on load-bearing claims; weakest claim flagged per deliverable.
 - **Gate law.** Exact operator tokens in `GATES.md`; commits fronted by `scripts/gate-guard.sh`.
 - **One risk vocabulary:** low | med | high | crit. **No absolute machine paths. Zero credentials.**
+
+Canonical author identity (S0-RECONCILE, 2026-08-31): **Nathan Lim** — LICENSE copyright
+lines cite this form estate-wide; the GitHub handle is an address, not a copyright holder.

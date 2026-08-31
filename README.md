@@ -5,7 +5,8 @@ person actually knows into a [psychic-templates](https://github.com/nathan-hayas
 contract — and turns everything they *don't* know into an explicit `unknown_fields` list instead
 of a guess. The doctrine, mechanized: blank never becomes plausible.
 
-**PRIVATE at creation.** Publication is its own future gate decision.
+**PUBLIC** since an out-of-band flip after creation (flip date unrecorded — gh pushedAt matches
+the birth commit; ratified 2026-08-31, see the VIS-RECONCILE ledger row). Private at creation.
 
 ## Quickstart
 

@@ -174,5 +174,38 @@ else
   sk "no browser binary on this host — rendered-DOM check deferred, stated"
 fi
 
+
+# S0-RECONCILE — the explainer-epoch discipline, ported from the parent with ONE DECLARED
+# VARIANCE: an empty post-epoch set is PASS-with-reason here (this repo gates rarely, so the
+# epoch row is often the last row); the parent's stricter FAIL stands over there. Grandfathered
+# rows (enumerated in INDEX.md) are events recorded without tokens and owe no explainer.
+exepoch=$(grep -m1 '^EXPLAINER-EPOCH: ' docs/explainers/INDEX.md 2>/dev/null | awk '{print $2}')
+exgf=$(grep -m1 '^EXPLAINER-GRANDFATHERED: ' docs/explainers/INDEX.md 2>/dev/null | sed 's/^EXPLAINER-GRANDFATHERED: //')
+if [ -z "${exepoch:-}" ]; then
+  no "explainer epoch line missing from docs/explainers/INDEX.md"
+else
+  exrows=$(awk -F'|' -v ep="$exepoch" '/^\| [A-Za-z]/ { g=$2; gsub(/^ +| +$/,"",g); if (found && g!="Gate") print g; if (g==ep) found=1 }' GATES.md)
+  exmiss=""
+  for g in $exrows; do
+    case " ${exgf:-} " in *" $g "*) continue ;; esac
+    [ -f "docs/explainers/$g.md" ] || exmiss="$exmiss [$g]"
+  done
+  if [ -z "$exrows" ]; then
+    ok "explainer epoch: post-epoch set empty (epoch is the last row) — PASS with stated reason (declared variance)"
+  elif [ -z "$exmiss" ]; then
+    ok "every post-epoch gate has its plain-language explainer"
+  else
+    no "explainer(s) MISSING for post-epoch gate(s):$exmiss"
+  fi
+  exfx=$(mktemp); cat GATES.md > "$exfx"
+  printf '| PROBE-X9 |  | p | p | awaiting probe |\n' >> "$exfx"
+  exrows2=$(awk -F'|' -v ep="$exepoch" '/^\| [A-Za-z]/ { g=$2; gsub(/^ +| +$/,"",g); if (found && g!="Gate") print g; if (g==ep) found=1 }' "$exfx")
+  case "$exrows2" in
+    *"PROBE-X9"*) ok "explainer fire-probe: a planted post-epoch gate row is seen by the extractor" ;;
+    *) no "explainer fire-probe FAILED — a planted row went unseen; the binding is void" ;;
+  esac
+  rm -f "$exfx"
+fi
+
 echo "== validate-sidekick: $P PASS / $F FAIL / $S SKIP =="
 [ "$F" -eq 0 ]
