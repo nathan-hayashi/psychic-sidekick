@@ -30,7 +30,19 @@ no network call: one HTML file, one plain-JS core.
 3. Fill what you know. Multiple-choice fields (risk class, approval, yes/no gates) only offer
    legal values; everything else is free text. A live strip shows exactly what will compile
    as UNKNOWN.
-4. Compile, copy, and paste the contract into your Claude session. The contract is the interface.
+4. Pick a destination — **2 lanes**: *local* compiles the plain contract, *remote* wraps the
+   same contract in the REMOTE-PROMPT-PROTOCOL preamble, a prompt pack for a phone-declared
+   session. Compile, copy, paste. The contract is the interface.
+
+## From your phone
+
+The page is touch-ready — 16px inputs so mobile browsers never zoom-jump, 44px tap targets, a
+sticky compile bar — and still zero-network: open the same `index.html` on the device however
+you already move files; nothing is served, nothing phones home. Compile in the *remote* lane
+and paste the pack into Claude mobile: the preamble tells that session to run to completion and
+record judgment calls as ESCALATION lines instead of stopping to ask. The law lives in
+`docs/REMOTE-PROMPT-PROTOCOL.md`, including its honesty section — nothing mechanical proves a
+mobile session honors the preamble.
 
 ## The vocabulary is vendored, not invented
 
@@ -44,5 +56,8 @@ The validator sync-checks it against a sibling checkout when one is present (set
 `./scripts/validate-sidekick.sh` — structure, vocabulary bindings both directions,
 self-containment (zero external references, zero network APIs), the doctrine verbatim, node
 behavioral tests when node is present (stated SKIP when not), sibling sync, hygiene, README
-count bindings, negative controls proven to fire against planted fixtures, and a rendered-DOM
-browser check whenever a browser binary is already on the host (stated SKIP otherwise).
+count bindings, negative controls proven to fire against planted fixtures, the phone-surface
+static arms (the width query, the 16px/44px/sticky laws, the 2-lane count by two anchors, an
+overflow scanner fire-probed with a planted 900px div), and browser render checks — page DOM
+plus a phone-viewport fit meter measured in-engine — whenever a browser binary is already on
+the host (stated SKIP otherwise; those legs are the operator machine's drill).

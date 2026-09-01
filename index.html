@@ -43,6 +43,16 @@
   #out { width: 100%; padding: 0.75rem; border: 1px solid var(--line); border-radius: 8px;
          background: var(--card); font: 0.85rem/1.5 ui-monospace, "Cascadia Mono", monospace; }
   footer { margin-top: 1.5rem; color: var(--muted); font-size: 0.85rem; }
+  @media (max-width: 480px) {
+    body { padding: 1rem 0.9rem 5.5rem; }
+    select, textarea, button { font-size: 16px; }
+    button, select { min-height: 44px; }
+    .controls { gap: 0.75rem; }
+    .controls label { width: 100%; }
+    select { width: 100%; max-width: 100%; }
+    .actions { position: sticky; bottom: 0; background: var(--bg); padding: 0.6rem 0;
+               margin: 1rem 0 0; z-index: 2; }
+  }
 </style>
 </head>
 <body>
@@ -70,6 +80,12 @@ in its own field.</div>
       <option value="marketing">marketing</option>
     </select>
   </label>
+  <label>Destination
+    <select id="lane">
+      <option class="lane-opt" data-sw="local" value="local">local — plain contract</option>
+      <option class="lane-opt" data-sw="remote" value="remote">remote — prompt pack (phone)</option>
+    </select>
+  </label>
 </div>
 
 <form id="form" onsubmit="return false"></form>
@@ -88,6 +104,7 @@ sync-checked. Runs from file://; zero network, zero dependencies.</footer>
 (function () {
   var tplSel = document.getElementById('tpl');
   var preSel = document.getElementById('preset');
+  var laneSel = document.getElementById('lane');
   var form = document.getElementById('form');
   var unk = document.getElementById('unk');
   var out = document.getElementById('out');
@@ -149,11 +166,14 @@ sync-checked. Runs from file://; zero network, zero dependencies.</footer>
     for (var k in d) { if (Object.prototype.hasOwnProperty.call(d, k)) { vals[k] = d[k]; } }
     render(vals);
   });
+  laneSel.addEventListener('change', function () {
+    btnC.textContent = laneSel.value === 'remote' ? 'Compile prompt pack' : 'Compile contract';
+  });
   form.addEventListener('input', updateUnknown);
   form.addEventListener('change', updateUnknown);
 
   btnC.addEventListener('click', function () {
-    out.value = compileContract(tplSel.value, readValues());
+    out.value = compilePromptPack(tplSel.value, readValues(), laneSel.value);
     btnCp.disabled = false;
   });
   btnCp.addEventListener('click', function () {

@@ -108,7 +108,7 @@ if command -v node >/dev/null 2>&1; then
 else
   sk "node absent — inline wiring parse check deferred"
 fi
-for ident in fieldsFor computeUnknowns compileContract presetDefaults CHOICES; do
+for ident in fieldsFor computeUnknowns compilePromptPack presetDefaults CHOICES; do
   d=$(grep -cE "^(var|function) $ident" js/compile.js)
   [[ "$d" =~ ^[0-9]+$ ]] || d=0
   u=$(grep -cF "$ident" index.html)
@@ -118,8 +118,8 @@ for ident in fieldsFor computeUnknowns compileContract presetDefaults CHOICES; d
 done
 
 
-echo "== E2r. remote-lane identifiers (defined + exported + test-exercised; full ui wiring lands at SIDE-R2) =="
-for ident in REMOTE_PREAMBLE compilePromptPack; do
+echo "== E2r. lane identifiers (defined + exported + test-exercised; the pack also rides §E2 since SIDE-R2) =="
+for ident in REMOTE_PREAMBLE compilePromptPack compileContract; do
   d=$(grep -cE "^(var|function) $ident" js/compile.js); [[ "$d" =~ ^[0-9]+$ ]] || d=0
   e=$(grep -cF "$ident: $ident" js/compile.js); [[ "$e" =~ ^[0-9]+$ ]] || e=0
   x=$(grep -cF "$ident" tests/compile-test.js); [[ "$x" =~ ^[0-9]+$ ]] || x=0
@@ -127,6 +127,39 @@ for ident in REMOTE_PREAMBLE compilePromptPack; do
     && ok "remote identifier bound: $ident (defined+exported+tested)" \
     || no "remote identifier broken: $ident (defined=$d exported=$e tested=$x)"
 done
+
+
+echo "== E3. the phone surface (static, every clone; SIDE-R2) =="
+mq=$(grep -c '@media (max-width:' index.html); [[ "$mq" =~ ^[0-9]+$ ]] || mq=0
+[ "$mq" -eq 1 ] && ok "one phone width query governs the mobile law" || no "phone width query count $mq != 1"
+p16=$(grep -c 'font-size: 16px' index.html); [[ "$p16" =~ ^[0-9]+$ ]] || p16=0
+[ "$p16" -ge 1 ] && ok "16px input law present (mobile browsers never zoom-jump)" || no "16px input law missing"
+p44=$(grep -c 'min-height: 44px' index.html); [[ "$p44" =~ ^[0-9]+$ ]] || p44=0
+[ "$p44" -ge 1 ] && ok "44px tap-target law present" || no "44px tap-target law missing"
+stk=$(grep -c 'position: sticky' index.html); [[ "$stk" =~ ^[0-9]+$ ]] || stk=0
+[ "$stk" -ge 1 ] && ok "sticky compile bar law present" || no "sticky compile bar law missing"
+lopt=$(grep -c 'class="lane-opt"' index.html); [[ "$lopt" =~ ^[0-9]+$ ]] || lopt=0
+lsw=$(grep -c 'data-sw="' index.html); [[ "$lsw" =~ ^[0-9]+$ ]] || lsw=0
+{ [ "$lopt" -eq 2 ] && [ "$lsw" -eq 2 ]; } && ok "exactly 2 lanes by both anchors (lane-opt, data-sw)" \
+  || no "lane anchors disagree or drifted: lane-opt=$lopt data-sw=$lsw (2 expected)"
+rlane=$(grep -oE '\*\*[0-9]+ lanes\*\*' README.md | grep -oE '[0-9]+' | sort -u)
+rlN=$(grep -c . <<<"$rlane"); [[ "$rlN" =~ ^[0-9]+$ ]] || rlN=0
+{ [ "$rlN" -eq 1 ] && [ "$rlane" = "$lopt" ]; } && ok "README lane count bound every-occurrence (**$rlane lanes** == UI $lopt)" \
+  || no "README lane binding broken: distinct values [$rlane] vs UI $lopt"
+wmax=$(grep -oE '(max-)?width: *[0-9]+px' index.html | grep -v '^max-' | grep -oE '[0-9]+' | sort -n | tail -1)
+[ -n "$wmax" ] || wmax=0
+[ "$wmax" -le 480 ] && ok "no bare fixed width beyond phones (max ${wmax}px)" \
+  || no "fixed width ${wmax}px would overflow a phone"
+e3sc=$(mktemp -d)
+cp -r . "$e3sc/repo" 2>/dev/null
+sed -i.bak 's|</body>|<div style="width: 900px">overflow probe</div></body>|' "$e3sc/repo/index.html" && rm -f "$e3sc/repo/index.html.bak"
+plant=$(grep -c 'width: 900px' "$e3sc/repo/index.html"); [[ "$plant" =~ ^[0-9]+$ ]] || plant=0
+[ "$plant" -eq 1 ] && ok "E3 probe planted (asserted before the guard is asked to refuse)" || no "E3 probe DID NOT plant"
+wprobe=$(grep -oE '(max-)?width: *[0-9]+px' "$e3sc/repo/index.html" | grep -v '^max-' | grep -oE '[0-9]+' | sort -n | tail -1)
+[ -n "$wprobe" ] || wprobe=0
+[ "$wprobe" -gt 480 ] && ok "control fires: the overflow scanner catches the planted 900px div" \
+  || no "control DID NOT fire — a 900px plant passed the scanner"
+rm -rf "$e3sc"
 
 echo "== F. sibling sync (conditional) =="
 TPATH="${PSYCHIC_TEMPLATES_PATH:-../psychic-templates}"
@@ -209,6 +242,43 @@ else
   sk "no browser binary on this host — rendered-DOM check deferred, stated"
 fi
 
+
+
+echo "== J2. phone render (conditional — a stated SKIP wherever no browser ships; SIDE-R2) =="
+if [ -n "$BROWSER" ]; then
+  j2d=$(mktemp)
+  "$BROWSER" --headless=new --disable-gpu --no-sandbox --window-size=390,844 --virtual-time-budget=2000 \
+    --dump-dom "file://$(pwd)/index.html" > "$j2d" 2>/dev/null
+  j2l=$(grep -o 'class="lane-opt"' "$j2d" | wc -l); [[ "$j2l" =~ ^[0-9]+$ ]] || j2l=0
+  [ "$j2l" -eq 2 ] && ok "J2 rendered DOM offers both lanes at phone viewport" \
+    || no "J2 lanes in rendered DOM: $j2l (2 expected)"
+  j2f=$(grep -o 'data-field="' "$j2d" | wc -l); [[ "$j2f" =~ ^[0-9]+$ ]] || j2f=0
+  [ "$j2f" -ge 9 ] && ok "J2 wiring executed at 390px ($j2f data-field inputs)" \
+    || no "J2 wiring did not run at phone viewport ($j2f inputs)"
+  rm -f "$j2d"
+  j2r=$(mktemp -d)
+  cp -r . "$j2r/fit" 2>/dev/null
+  sed -i.bak 's|</body>|<script>document.title = (document.documentElement.scrollWidth > window.innerWidth) ? "J2-OVERFLOW" : "J2-FITS";</script></body>|' "$j2r/fit/index.html" && rm -f "$j2r/fit/index.html.bak"
+  mplant=$(grep -c 'J2-OVERFLOW' "$j2r/fit/index.html"); [[ "$mplant" =~ ^[0-9]+$ ]] || mplant=0
+  [ "$mplant" -eq 1 ] && ok "J2 fit meter planted in the scratch copy" || no "J2 fit meter DID NOT plant"
+  fitdom=$(mktemp)
+  "$BROWSER" --headless=new --disable-gpu --no-sandbox --window-size=390,844 --virtual-time-budget=2000 \
+    --dump-dom "file://$j2r/fit/index.html" > "$fitdom" 2>/dev/null
+  fita=$(grep -c '<title>J2-FITS</title>' "$fitdom"); [[ "$fita" =~ ^[0-9]+$ ]] || fita=0
+  [ "$fita" -eq 1 ] && ok "J2 live layout FITS a 390px phone (measured in-engine)" \
+    || no "J2 layout overflows at 390px, or the meter went silent"
+  cp -r . "$j2r/probe" 2>/dev/null
+  sed -i.bak 's|</body>|<div style="width: 900px">p</div><script>document.title = (document.documentElement.scrollWidth > window.innerWidth) ? "J2-OVERFLOW" : "J2-FITS";</script></body>|' "$j2r/probe/index.html" && rm -f "$j2r/probe/index.html.bak"
+  pdom=$(mktemp)
+  "$BROWSER" --headless=new --disable-gpu --no-sandbox --window-size=390,844 --virtual-time-budget=2000 \
+    --dump-dom "file://$j2r/probe/index.html" > "$pdom" 2>/dev/null
+  pova=$(grep -c '<title>J2-OVERFLOW</title>' "$pdom"); [[ "$pova" =~ ^[0-9]+$ ]] || pova=0
+  [ "$pova" -eq 1 ] && ok "J2 control fires: the planted 900px div reports OVERFLOW in-engine" \
+    || no "J2 control DID NOT fire — a 900px plant rendered as fitting"
+  rm -f "$fitdom" "$pdom"; rm -rf "$j2r"
+else
+  sk "no browser on this host — J2 render legs are the operator machine's drill (declared; the E3 static arms above run everywhere)"
+fi
 
 # S0-RECONCILE — the explainer-epoch discipline, ported from the parent with ONE DECLARED
 # VARIANCE: an empty post-epoch set is PASS-with-reason here (this repo gates rarely, so the
