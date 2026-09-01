@@ -23,6 +23,19 @@ rendered as `UNKNOWN`, with `unknown_fields` computed — never typed — and th
 A human copies it into a Claude session. **Sidekick never invokes an agent, never sends a
 request, never holds a credential.** The hand-off is a paste; the boundary is the clipboard.
 
+## The remote lane (SIDE-R1)
+
+Two artifact shapes now compile: the plain contract (local lane) and the PROMPT PACK (remote
+lane) — the same contract wrapped in the REMOTE-PROMPT-PROTOCOL preamble. The boundary is
+unchanged and the bolded sentence above covers the remote lane verbatim: the hand-off is a paste,
+the human is the transport. New failure rows:
+
+| Condition | Behavior |
+|---|---|
+| Preamble in `js/compile.js` diverges from the protocol doc's fenced block | validator FAIL (§D2), release blocked |
+| `compilePromptPack` undefined or unexported | validator FAIL (§E2r) / node tests fail |
+
+
 ## Presets — provenance and the honest limit
 
 Department presets (finance / engineering / marketing) fill `context_policy`-family defaults and

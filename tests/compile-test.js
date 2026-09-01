@@ -47,5 +47,15 @@ var md2 = C.compileContract('context-policy', { risk_class: 'high', sources_allo
 t('fully filled contract reads unknown_fields: none', md2.indexOf('unknown_fields: none') !== -1);
 t('unknown template refuses to compile', C.compileContract('nope', {}) === null);
 
+// SIDE-R1: the remote lane — the pack WRAPS the contract, never rewrites it.
+var pk = C.compilePromptPack('request-contract', { goal: 'Ship the fix' }, 'remote');
+t('remote pack starts with the preamble first line', pk.indexOf('REMOTE PROMPT PROTOCOL v1') === 0);
+var inner = C.compileContract('request-contract', { goal: 'Ship the fix' });
+t('remote pack contains the whole contract verbatim', pk.indexOf(inner) !== -1);
+t('local lane is byte-identical to compileContract', C.compilePromptPack('request-contract', { goal: 'x' }, 'local') === C.compileContract('request-contract', { goal: 'x' }));
+t('unknown lane falls back to local, never throws', C.compilePromptPack('request-contract', { goal: 'x' }, 'wat') === C.compileContract('request-contract', { goal: 'x' }));
+t('unknown template still refuses in the pack path', C.compilePromptPack('nope', {}, 'remote') === null);
+t('pack is exactly REMOTE_PREAMBLE + contract, byte-for-byte', pk === C.REMOTE_PREAMBLE + inner);
+
 console.log('== compile-test: ' + (fails === 0 ? 'ALL PASS' : fails + ' FAIL') + ' ==');
 process.exit(fails === 0 ? 0 : 1);

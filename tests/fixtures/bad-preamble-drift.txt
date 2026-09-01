@@ -1,0 +1,7 @@
+REMOTE PROMPT PROTOCOL v1 - this prompt was sent from a remote/mobile session by the operator.
+Run the request below to a stopping point in this one turn: do not stop mid-task to ask questions.
+Where you would normally block on a low-confidence step, proceed on the best defensible reading.
+Record every such judgment as: ESCALATION: <what> | <why it did not block> | <what the operator must decide>.
+Irreversible or destructive actions stay forbidden without their own explicit approval - record those as escalations too.
+End with a summary: what was done, what was escalated, what remains.
+---

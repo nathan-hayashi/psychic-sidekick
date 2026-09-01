@@ -17,3 +17,4 @@ this repo gates rarely, and the epoch row may legitimately be the last row.
 ## Explainers
 
 - [S0-RECONCILE](S0-RECONCILE.md) — license, identity, visibility truth, and this discipline itself.
+- [SIDE-R1](SIDE-R1.md) — the remote lane's brain: the preamble, the pack, the declared inversion.

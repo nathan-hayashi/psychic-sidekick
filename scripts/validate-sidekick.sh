@@ -80,6 +80,22 @@ else
   sk "node absent — behavioral tests deferred, static bindings above still bind"
 fi
 
+
+echo "== D2. remote preamble — two files, one byte-identity (SIDE-R1) =="
+d2js=$(grep -m1 "^var REMOTE_PREAMBLE = '" js/compile.js | sed -E "s/^var REMOTE_PREAMBLE = '(.*)';$/\\1/")
+d2doc=$(awk '/^# REMOTE-PREAMBLE v1$/{f=1;next} f&&/^```/{exit} f' docs/REMOTE-PROMPT-PROTOCOL.md)
+d2jsd=$(printf '%b' "$d2js")
+d2jn=$(printf '%s\n' "$d2jsd" | grep -c . || true); [[ "$d2jn" =~ ^[0-9]+$ ]] || d2jn=0
+d2dn=$(printf '%s\n' "$d2doc" | grep -c . || true); [[ "$d2dn" =~ ^[0-9]+$ ]] || d2dn=0
+{ [ "$d2jn" -ge 6 ] && [ "$d2dn" -ge 6 ]; } \
+  && ok "D2 both preamble sources non-vacuous (js $d2jn / doc $d2dn lines)" \
+  || no "D2 extraction vacuous — js:$d2jn doc:$d2dn (want >=6 each)"
+if [ "$(printf '%s' "$d2jsd")" = "$(printf '%s' "$d2doc")" ]; then
+  ok "D2 preamble byte-identical: compile.js == protocol doc"
+else
+  no "D2 PREAMBLE DRIFT — compile.js and the protocol doc disagree"
+fi
+
 echo "== E2. ui wiring (node) =="
 if command -v node >/dev/null 2>&1; then
   iw=$(mktemp); iwjs="$iw.js"   # node --check demands a .js extension; plain mktemp names fail it
@@ -99,6 +115,17 @@ for ident in fieldsFor computeUnknowns compileContract presetDefaults CHOICES; d
   [[ "$u" =~ ^[0-9]+$ ]] || u=0
   [ "$d" -ge 1 ] && [ "$u" -ge 1 ] && ok "wiring identifier bound: $ident (defined + used)" \
     || no "wiring identifier broken: $ident (defined=$d used=$u)"
+done
+
+
+echo "== E2r. remote-lane identifiers (defined + exported + test-exercised; full ui wiring lands at SIDE-R2) =="
+for ident in REMOTE_PREAMBLE compilePromptPack; do
+  d=$(grep -cE "^(var|function) $ident" js/compile.js); [[ "$d" =~ ^[0-9]+$ ]] || d=0
+  e=$(grep -cF "$ident: $ident" js/compile.js); [[ "$e" =~ ^[0-9]+$ ]] || e=0
+  x=$(grep -cF "$ident" tests/compile-test.js); [[ "$x" =~ ^[0-9]+$ ]] || x=0
+  { [ "$d" -ge 1 ] && [ "$e" -ge 1 ] && [ "$x" -ge 1 ]; } \
+    && ok "remote identifier bound: $ident (defined+exported+tested)" \
+    || no "remote identifier broken: $ident (defined=$d exported=$e tested=$x)"
 done
 
 echo "== F. sibling sync (conditional) =="
@@ -137,6 +164,14 @@ r4=$(grep -oE '\*\*[0-9]+ templates\*\*' README.md 2>/dev/null | head -1 | grep 
   || no "README says $r4 templates, the UI offers $topt"
 
 echo "== I. negative controls (existence first, then fire) =="
+[ -f tests/fixtures/bad-preamble-drift.txt ] && ok "fixture exists: bad-preamble-drift.txt" \
+  || no "missing fixture: bad-preamble-drift.txt"
+d2fx=$(cat tests/fixtures/bad-preamble-drift.txt 2>/dev/null)
+if [ "$(printf '%s' "$d2jsd")" = "$(printf '%s' "$d2fx")" ]; then
+  no "D2 control VOID — the drift fixture equals the live preamble"
+else
+  ok "control fires: the D2 comparator distinguishes the drifted fixture"
+fi
 for fx in tests/fixtures/bad-vendor-drift.txt; do
   [ -f "$fx" ] && ok "fixture exists: $fx" || no "fixture MISSING (controls would be vacuous): $fx"
 done

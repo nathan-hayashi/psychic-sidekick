@@ -120,10 +120,26 @@ function compileContract(tpl, values) {
   return lines.join('\n');
 }
 
+
+// SIDE-R1: the remote lane. The preamble is a SINGLE-LINE literal on purpose — the doctrine
+// binding (validator section D2) extracts this line and byte-compares its decoded form against
+// the fenced block in docs/REMOTE-PROMPT-PROTOCOL.md, in pure shell, formatter-safe.
+var REMOTE_PREAMBLE = 'REMOTE PROMPT PROTOCOL v1 - this prompt was sent from a remote/mobile session by the operator.\nRun the request below to completion in this one turn: do not stop mid-task to ask questions.\nWhere you would normally block on a low-confidence step, proceed on the best defensible reading.\nRecord every such judgment as: ESCALATION: <what> | <why it did not block> | <what the operator must decide>.\nIrreversible or destructive actions stay forbidden without their own explicit approval - record those as escalations too.\nEnd with a summary: what was done, what was escalated, what remains.\n---\n';
+
+// Compile a prompt pack: 'remote' wraps the contract in the protocol preamble; anything else —
+// including an unknown lane — falls back to the plain local contract, never a throw.
+function compilePromptPack(tpl, values, lane) {
+  var contract = compileContract(tpl, values);
+  if (contract === null) return null;
+  if (lane === 'remote') return REMOTE_PREAMBLE + contract;
+  return contract;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     DOCTRINE: DOCTRINE, CHOICES: CHOICES, TEMPLATES: TEMPLATES, PRESETS: PRESETS,
     fieldsFor: fieldsFor, presetDefaults: presetDefaults,
-    computeUnknowns: computeUnknowns, compileContract: compileContract
+    computeUnknowns: computeUnknowns, compileContract: compileContract,
+    REMOTE_PREAMBLE: REMOTE_PREAMBLE, compilePromptPack: compilePromptPack
   };
 }
