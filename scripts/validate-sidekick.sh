@@ -171,6 +171,23 @@ if [ -f "$TPATH/SCHEMA.md" ]; then
   sibdoc=$(grep -F "$DOC" "$TPATH/templates/request-contract.md" | head -1)
   [ -n "$sibdoc" ] && ok "doctrine line identical to the sibling's" \
     || no "doctrine text diverged from the sibling"
+  refn=$(grep -c . "$ref"); [[ "$refn" =~ ^[0-9]+$ ]] || refn=0
+  [ "$refn" -ge 20 ] && ok "F extractor non-vacuous ($refn sibling fields, floor 20)" \
+    || no "F extractor vacuous: $refn fields from the sibling SCHEMA (want >= 20)"
+  fbt=$(mktemp)
+  sed -E 's/^\| (goal|risk_class|approval) \|/| `\1` |/' "$TPATH/SCHEMA.md" > "$fbt"
+  fbtn=$(awk -F'|' '/^\| [a-z_]+ \|/{gsub(/ /,"",$2); if($2!="field") print $2}' "$fbt" | grep -c .)
+  [[ "$fbtn" =~ ^[0-9]+$ ]] || fbtn=0
+  { [ "$fbtn" -eq $((refn-3)) ] && [ "$fbtn" -lt 20 ]; } \
+    && ok "control fires: backticked rows are invisible to the extractor AND the floor catches the shrink ($fbtn)" \
+    || no "backtick fire-probe broken: $fbtn (want $((refn-3)) and < 20) — the subset-blind hole is open"
+  rm -f "$fbt"
+  uikeys=$(sed -n '/^var TEMPLATES = {/,/^};/p' js/compile.js | grep -oE "'[a-z-]+': \[" | sed -E "s/^'([a-z-]+)': \[$/\1/" | sort)
+  sibstems=$(ls "$TPATH"/templates/*.md 2>/dev/null | sed -E 's|.*/||; s|\.md$||' | sort)
+  fex=$(comm -13 <(printf '%s\n' "$uikeys") <(printf '%s\n' "$sibstems") | grep -c .)
+  fmiss=$(comm -23 <(printf '%s\n' "$uikeys") <(printf '%s\n' "$sibstems"))
+  [ -z "$fmiss" ] && ok "template set: every UI key resolves to a sibling template (UI subset; $fex sibling extra(s) legal, announced)" \
+    || no "UI template(s) missing from the sibling: $(tr '\n' ' ' <<<"$fmiss")"
   rm -f "$ref"
 else
   sk "sibling checkout not present at \$PSYCHIC_TEMPLATES_PATH or ../psychic-templates — sync deferred, stated"

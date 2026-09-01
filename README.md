@@ -23,7 +23,8 @@ no network call: one HTML file, one plain-JS core.
 ## What it does
 
 1. Pick one of **4 templates** (request-contract, high-stakes-task, context-policy,
-   audit-checklist) — the same four the templates repo defines.
+   audit-checklist) — a curated four of the **6 templates** the templates repo now defines
+   (the UI stays deliberately minimal; the sibling-sync arm proves the four resolve).
 2. Optionally pick a department preset (finance / engineering / marketing). **Presets fill
    editable defaults, grounded in the parent program's tier table. They are not policy, and
    nothing here grants approval** — approval is a human act recorded in its own field.
