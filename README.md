@@ -1,5 +1,7 @@
 # psychic-sidekick
 
+![fields](https://img.shields.io/badge/fields-22-2f6f4f)
+
 The Request-Contract front end: a fill-in-the-fields, multiple-choice page that compiles what a
 person actually knows into a [psychic-templates](https://github.com/nathan-hayashi/psychic-templates)
 contract — and turns everything they *don't* know into an explicit `unknown_fields` list instead
@@ -11,7 +13,6 @@ the birth commit; ratified 2026-08-31, see the VIS-RECONCILE ledger row). Privat
 ## Quickstart
 
 ```bash
-mkdir -p ~/projects && cd ~/projects
 git clone https://github.com/nathan-hayashi/psychic-sidekick.git
 cd psychic-sidekick && ./scripts/validate-sidekick.sh
 ```
@@ -23,7 +24,7 @@ no network call: one HTML file, one plain-JS core.
 ## What it does
 
 1. Pick one of **4 templates** (request-contract, high-stakes-task, context-policy,
-   audit-checklist) — a curated four of the **6 templates** the templates repo now defines
+   audit-checklist) — a curated four of the six the templates repo now defines
    (the UI stays deliberately minimal; the sibling-sync arm proves the four resolve).
 2. Optionally pick a department preset (finance / engineering / marketing). **Presets fill
    editable defaults, grounded in the parent program's tier table. They are not policy, and
@@ -35,6 +36,10 @@ no network call: one HTML file, one plain-JS core.
    same contract in the REMOTE-PROMPT-PROTOCOL preamble, a prompt pack for a phone-declared
    session. Compile, copy, paste. The contract is the interface.
 
+## What it looks like
+
+![The sidekick form: template and destination selectors, live UNKNOWN strip, compile bar](docs/screenshot.svg)
+
 ## From your phone
 
 The page is touch-ready — 16px inputs so mobile browsers never zoom-jump, 44px tap targets, a
@@ -44,6 +49,12 @@ and paste the pack into Claude mobile: the preamble tells that session to run to
 record judgment calls as ESCALATION lines instead of stopping to ask. The law lives in
 `docs/REMOTE-PROMPT-PROTOCOL.md`, including its honesty section — nothing mechanical proves a
 mobile session honors the preamble.
+
+## What is not asserted
+
+Two halves are stated rather than promised away: nothing mechanical proves a mobile session
+honors the remote preamble (`docs/REMOTE-PROMPT-PROTOCOL.md` §5), and whether a request matches
+a template at all is judgment. The suite binds everything else it names.
 
 ## The vocabulary is vendored, not invented
 

@@ -204,14 +204,24 @@ done
 [ -z "$credhits" ] && ok "no credential-shaped strings in tracked files" || no "credential shape in:$credhits"
 
 echo "== H. README count bindings =="
-r22=$(grep -oE '\*\*[0-9]+ fields\*\*' README.md 2>/dev/null | head -1 | grep -oE '[0-9]+')
-[[ "$r22" =~ ^[0-9]+$ ]] || r22=-1
-[ "$r22" -eq "$nlines" ] && ok "README field count ($r22) matches the vendored list ($nlines)" \
-  || no "README says $r22 fields, vendor has $nlines"
-r4=$(grep -oE '\*\*[0-9]+ templates\*\*' README.md 2>/dev/null | head -1 | grep -oE '[0-9]+')
-[[ "$r4" =~ ^[0-9]+$ ]] || r4=-1
-[ "$r4" -eq "$topt" ] && ok "README template count ($r4) matches the UI ($topt)" \
-  || no "README says $r4 templates, the UI offers $topt"
+r22v=$(grep -oE '\*\*[0-9]+ fields\*\*|badge/fields-[0-9]+' README.md 2>/dev/null | grep -oE '[0-9]+' | sort -u)
+r22n=$(grep -c . <<<"$r22v"); [[ "$r22n" =~ ^[0-9]+$ ]] || r22n=0
+{ [ "$r22n" -eq 1 ] && [ "$r22v" = "$nlines" ]; } \
+  && ok "README field count bound every-occurrence incl. the badge ($r22v == vendor $nlines)" \
+  || no "README field binding broken: distinct values [$(tr '\n' ' ' <<<"$r22v")] vs vendor $nlines"
+r4v=$(grep -oE '\*\*[0-9]+ templates\*\*' README.md 2>/dev/null | grep -oE '[0-9]+' | sort -u)
+r4n=$(grep -c . <<<"$r4v"); [[ "$r4n" =~ ^[0-9]+$ ]] || r4n=0
+{ [ "$r4n" -eq 1 ] && [ "$r4v" = "$topt" ]; } \
+  && ok "README template count bound every-occurrence ($r4v == UI $topt; the sibling's six is deliberately unbindable prose)" \
+  || no "README template binding broken: distinct values [$(tr '\n' ' ' <<<"$r4v")] vs UI $topt"
+hcp=$(mktemp); cat README.md > "$hcp"; printf '\nbadge/fields-99\n**9 templates**\n' >> "$hcp"
+h2a=$(grep -oE '\*\*[0-9]+ fields\*\*|badge/fields-[0-9]+' "$hcp" | grep -oE '[0-9]+' | sort -u | grep -c .)
+h2b=$(grep -oE '\*\*[0-9]+ templates\*\*' "$hcp" | grep -oE '[0-9]+' | sort -u | grep -c .)
+[[ "$h2a" =~ ^[0-9]+$ ]] || h2a=0; [[ "$h2b" =~ ^[0-9]+$ ]] || h2b=0
+{ [ "$h2a" -ge 2 ] && [ "$h2b" -ge 2 ]; } \
+  && ok "controls fire: planted conflicting badge and prose counts reach both extractors" \
+  || no "every-occurrence controls DID NOT fire (fields probe $h2a, templates probe $h2b)"
+rm -f "$hcp"
 
 echo "== I. negative controls (existence first, then fire) =="
 [ -f tests/fixtures/bad-preamble-drift.txt ] && ok "fixture exists: bad-preamble-drift.txt" \
