@@ -307,6 +307,39 @@ else
   sk "no browser on this host — J2 render legs are the operator machine's drill (declared; the E3 static arms above run everywhere)"
 fi
 
+
+echo "== K. the hosted lane (SIDE-PAGES-1; conditional on gh + auth, three states) =="
+grep -qF 'https://nathan-hayashi.github.io/psychic-sidekick/' README.md \
+  && ok "README names the exact hosted URL (the same-bytes claim is true by construction: branch-root serving, no build)" \
+  || no "README hosted URL missing or drifted"
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+  kpg=$(gh api repos/nathan-hayashi/psychic-sidekick/pages 2>/dev/null); kst=$?
+  if [ "$kst" -eq 0 ]; then
+    kbr=$(printf '%s' "$kpg" | jq -r '.source.branch // ""' 2>/dev/null)
+    kpa=$(printf '%s' "$kpg" | jq -r '.source.path // ""' 2>/dev/null)
+    { [ "$kbr" = "dev" ] && [ "$kpa" = "/" ]; } \
+      && ok "Pages enabled and serving dev:/ (the hosted lane is live)" \
+      || no "Pages enabled but source drifted (branch='$kbr' path='$kpa' — want dev:/)"
+  else
+    kmsg=$(gh api repos/nathan-hayashi/psychic-sidekick/pages 2>&1 | head -1)
+    case "$kmsg" in
+      *"Not Found"*|*404*) no "Pages DISABLED under working auth (the regression this arm exists for)" ;;
+      *) sk "Pages state unreadable — $( printf '%s' "$kmsg" | head -c 60 ) (transport/rate-limit class, announced)" ;;
+    esac
+  fi
+  khp=$(gh repo view nathan-hayashi/psychic-sidekick --json homepageUrl --jq '.homepageUrl' 2>/dev/null)
+  if [ -n "${khp:-}" ]; then
+    [ "$khp" = "https://nathan-hayashi.github.io/psychic-sidekick/" ] \
+      && ok "repo homepage points at the hosted page" \
+      || no "repo homepage is '$khp' — want the hosted URL (the declared overwrite)"
+  else
+    sk "homepage unreadable (transport) — announced"
+  fi
+else
+  sk "gh absent or unauthenticated — hosted-lane verification deferred, stated (the README arm above still binds)"
+  sk "homepage check deferred likewise"
+fi
+
 # S0-RECONCILE — the explainer-epoch discipline, ported from the parent with ONE DECLARED
 # VARIANCE: an empty post-epoch set is PASS-with-reason here (this repo gates rarely, so the
 # epoch row is often the last row); the parent's stricter FAIL stands over there. Grandfathered

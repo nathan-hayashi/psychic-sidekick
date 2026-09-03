@@ -17,6 +17,13 @@ git clone https://github.com/nathan-hayashi/psychic-sidekick.git
 cd psychic-sidekick && ./scripts/validate-sidekick.sh
 ```
 
+**Or skip the clone entirely: the hosted page is the same bytes.**
+<https://nathan-hayashi.github.io/psychic-sidekick/> serves this repo's `index.html` straight
+from the `dev` branch root — no build step, so hosted and local are byte-identical. GitHub
+serves the file; the page still never phones home (the suite's self-containment arms prove the
+no-network half). Part of the [psychic-crew](https://github.com/nathan-hayashi/psychic-crew)
+estate.
+
 Then open `index.html` in a browser — straight from `file://`, or via
 `python3 -m http.server 8080` if you prefer a served page. There is no build step, no install,
 no network call: one HTML file, one plain-JS core.
